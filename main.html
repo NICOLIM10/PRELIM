@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prelim Grade Calculator</title>
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <link rel="stylesheet" href="styles12.css"> <!-- Your CSS file -->
+    <style>
+        body {
+            background-color: #f0f8ff; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; 
+            margin: 0; 
+            font-family: "Space Grotesk", sans-serif;
+            color: #333; /* Text color */
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-width: 400px; 
+            width: 100%; 
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2c3e50; /* Dark heading color */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold; /* Bold labels for clarity */
+        }
+
+        input {
+            width: calc(100% - 22px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #7f8c8d;
+            border-radius: 5px;
+            background-color: #ecf0f1; /* Light background for inputs */
+            color: #34495e; /* Darker text color for readability */
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #3498db; /* Focused input border color */
+            outline: none; /* Remove default outline */
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2980b9; /* Button color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.2s; /* Smooth transitions */
+        }
+
+        button:hover {
+            background-color: #3498db; /* Button hover color */
+            transform: translateY(-2px); /* Lift effect on hover */
+        }
+
+        #results {
+            margin-top: 20px;
+            text-align: center; /* Center align results */
+        }
+
+        #results h2 {
+            color: #2980b9; /* Heading color for results */
+        }
+
+        #results p {
+            font-size: 1.1em;
+            margin: 5px 0;
+            color: black; /* black text for results */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prelim Grade Calculator</h1>
+        <form id="gradeForm" onsubmit="return false;"> <!-- Prevent form submission -->
+            <label for="attendance_absences">Number Absences:</label>
+            <input type="number" id="attendance_absences" min="0" max="100" placeholder="Enter Number of Absences">
+
+            <label for="recitation_score">Recitation Score:</label>
+            <input type="number" id="recitation_score" min="0" max="100" placeholder="Enter Recitation Score: 0-100">
+
+            <label for="quiz_score">Quiz Score:</label>
+            <input type="number" id="quiz_score" min="0" max="100" placeholder="Enter Quiz Score: 0-100">
+
+            <label for="requirements_grade">Requirements Grade:</label>
+            <input type="number" id="requirements_grade" min="0" max="100" placeholder="Enter Requirements Grade: 0-100">
+
+            <label for="prelim_exam_score">Prelim Exam Score:</label>
+            <input type="number" id="prelim_exam_score" min="0" max="100" placeholder="Enter Prelim Exam Score: 0-100">
+
+            <button type="button" id="calculate_button">Calculate Final Grade</button>
+        </form>
+        <div id="results">
+            <h2>Results:</h2>
+            <div id="result" class="result"></div>
+            <div id="inputted_prelim_grade" class="inputted_prelim_grade"></div>
+            <div id="prelim_result" class="prelim_result"></div>
+            <div id="midterm_final_result" class="midterm_final_result"></div>
+            <div id="dean_result" class="dean_result"></div>
+            <button type="button" id="restart_button">Restart</button> <!-- Restart button -->
+        </div>
+    </div>
+
+    <script>
+        function restartForm() {
+            document.getElementById('gradeForm').reset(); // Reset the form inputs
+            document.getElementById('result').textContent = ""; // Clear results
+            document.getElementById('inputted_prelim_grade').textContent = "";
+            document.getElementById('prelim_result').textContent = "";
+            document.getElementById('midterm_final_result').textContent = "";
+            document.getElementById('dean_result').textContent = "";
+        }
+
+        document.getElementById("restart_button").onclick = restartForm; // Bind restart function to the button
+
+        // Calculation function
+        function calculateFinalGrade() {
+            const attendance_absences = parseInt(document.getElementById('attendance_absences').value);
+            const quiz_score = parseFloat(document.getElementById('quiz_score').value);
+            const requirements_grade = parseFloat(document.getElementById('requirements_grade').value);
+            const recitation_score = parseFloat(document.getElementById('recitation_score').value);
+            const prelim_exam_score = parseFloat(document.getElementById('prelim_exam_score').value);
+            
+            let result = "";
+            let inputted_prelim_grade = "";
+            let prelim_result = "";
+            let midterm_final_result = "";
+            let dean_result = "";
+
+            // Validation check
+            if (!attendance_absences || !quiz_score || !requirements_grade || !recitation_score || !prelim_exam_score) {
+                result = "Please fill in all fields.";
+            } else if (attendance_absences < 0 || quiz_score < 0 || requirements_grade < 0 || recitation_score < 0 || prelim_exam_score < 0 ||
+                       attendance_absences > 100 || quiz_score > 100 || requirements_grade > 100 || recitation_score > 100 || prelim_exam_score > 100) {
+                result = "All grades must be between 0 and 100.";
+            } else {
+                const attendance_score = attendance_absences >= 4 ? "FAILED" : Math.max(0, 100 - (attendance_absences * 10));
+                
+                if (attendance_score === "FAILED") {
+                    inputted_prelim_grade = "Result: FAILED";
+                } else {
+                    const class_standing = (quiz_score * 0.40) + (requirements_grade * 0.30) + (recitation_score * 0.30);
+                    const prelim_grade = (prelim_exam_score * 0.60) + (attendance_score * 0.10) + (class_standing * 0.30);
+                    inputted_prelim_grade = `Your Prelim Grade is: ${prelim_grade.toFixed(2)}%`;
+
+                    if (prelim_grade < 75) {
+                        prelim_result = "You need to achieve higher grades in the midterm and final exams.";
+                        const required_midterm = ((75 - (prelim_grade * 0.20)) / 0.80).toFixed(2);
+                        const required_final = ((75 - (prelim_grade * 0.20 + required_midterm * 0.30)) / 0.50).toFixed(2);
+                        midterm_final_result = `To pass: Midterm grade of ${required_midterm}, Final grade of ${required_final}.`;
+                    } else {
+                        prelim_result = "You are passing so far!";
+                        const required_midterm = ((75 - (prelim_grade * 0.20)) / 0.80).toFixed(2);
+                        const required_final = ((75 - (prelim_grade * 0.20 + required_midterm * 0.30)) / 0.50).toFixed(2);
+                        midterm_final_result = `To maintain your grade: Midterm grade of ${required_midterm}, Final grade of ${required_final}.`;
+                    }
+
+                    dean_result = prelim_grade >= 90 ? "You are on track for the Dean's List!" : "You need higher grades to qualify for the Dean's List.";
+                }
+            }
+
+            // Display results
+            document.getElementById("result").textContent = result;
+            document.getElementById("inputted_prelim_grade").textContent = inputted_prelim_grade;
+            document.getElementById("prelim_result").textContent = prelim_result;
+            document.getElementById("midterm_final_result").textContent = midterm_final_result;
+            document.getElementById("dean_result").textContent = dean_result;
+        }
+
+        document.getElementById("calculate_button").onclick = calculateFinalGrade; // Bind calculation function to the button
+    </script>
+</body>
+</html>
